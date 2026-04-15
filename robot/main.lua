@@ -127,12 +127,6 @@ function sock:on_message(msg)
         local isSrcSelf = {
             [0] = true, [2] = true, [4] = true, [6] = true,
         }
-        local isSrcMachine = {
-            [1] = true, [5] = true,
-        }
-        local isMachineOperation = {
-            [0] = true, [1] = true, [4] = true, [5] = true,
-        }
 
         local subop = tonumber(entries[2 + 1])
         local side = tonumber(entries[2 + 2])
@@ -161,7 +155,7 @@ function sock:on_message(msg)
         end
 
         -- item transfer on slotted inventories
-        if isItemOperation[subop] and isMachineOperation[subop] then
+        if isItemOperation[subop] then
             local srcStack = nil
             local dstStack = nil
             if isSrcSelf[subop] then
@@ -201,7 +195,7 @@ function sock:on_message(msg)
         end
 
         -- fluid transfer on slotted inventories
-        if isFluidOperation[subop] and isMachineOperation[subop] then
+        if isFluidOperation[subop] then
             local srcStack = nil
             local dstStack = nil
             local dstCapacity = 0
