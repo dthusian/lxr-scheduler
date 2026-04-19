@@ -1,4 +1,5 @@
 type ItemStack = { id: string, meta: number, amount: number };
+type FluidStack = { id: string, amount: number };
 enum Side {
   BOTTOM = 0,
   TOP = 1,

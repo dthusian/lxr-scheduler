@@ -9,6 +9,15 @@ enum RpcOpcodes {
   AeFluid = 0x5
 }
 
+export enum RpcStatus {
+  Ok = 0x1,
+  ErrUnexpectedItem = 0x2,
+  ErrCannotMove = 0x3,
+  ErrNoInventory = 0x4,
+  ErrMissingItems = 0x5,
+  ErrOther = 0x6,
+}
+
 type RpcResponse<T> = { status: RpcStatus, data: T | null };
 
 function validateData<T>(data: unknown[] | null, types: string[]): T | null {
@@ -29,26 +38,14 @@ function validateRpcData<T>(data: RpcResponse<unknown[]>, types: string[]): RpcR
   }
 }
 
-export enum RpcStatus {
-  Ok = 0x1,
-  ErrUnexpectedItem = 0x2,
-  ErrCannotMove = 0x3,
-  ErrNoInventory = 0x4,
-  ErrMissingItems = 0x5
-}
-
 export enum TransferOps {
   ItemSelfToMachine = 0x0,
   ItemMachineToSelf = 0x1,
-  ItemSelfToAe = 0x2,
-  ItemAeToSelf = 0x3,
   FluidSelfToMachine = 0x4,
   FluidMachineToSelf = 0x5,
-  FluidSelfToAe = 0x6,
-  FluidAeToSelf = 0x7
 }
 
-export class RobotRpc {
+export class BaseRpc {
   conn: Socket;
   readline: Interface;
   nextSid: number;
@@ -98,6 +95,12 @@ export class RobotRpc {
       this.inflightReqs[sid] = resolve;
     });
   }
+}
+
+export class RobotRpc extends BaseRpc {
+  constructor(conn: Socket) {
+    super(conn);
+  }
 
   async reset(): Promise<RpcResponse<[]>> {
     return validateRpcData<[]>(await this.rpc(RpcOpcodes.Reset, []), []);
@@ -109,5 +112,17 @@ export class RobotRpc {
 
   async transfer(subOp: TransferOps, side: Side, srcSlot: number, dstSlot: number, amount: number, expectId: string, expectMeta: number): Promise<RpcResponse<[]>> {
     return validateRpcData<[]>(await this.rpc(RpcOpcodes.Transfer, [subOp, side, srcSlot, dstSlot, amount, expectId, expectMeta]), []);
+  }
+}
+
+export class AeControlRpc extends BaseRpc {
+  async provideItems(items: [string, number][]): Promise<RpcResponse<[]>> {
+    const args = ([items.length] as (string | number)[]).concat(items.flat());
+    return validateRpcData<[]>(await this.rpc(RpcOpcodes.AeItem, args), []);
+  }
+
+  async provideFluids(fluids: string[]): Promise<RpcResponse<[]>> {
+    const args = ([fluids.length] as (string | number)[]).concat(fluids);
+    return validateRpcData<[]>(await this.rpc(RpcOpcodes.AeFluid, args), []);
   }
 }

@@ -32,6 +32,10 @@ function sock:on_message(msg)
                 return
             end
         end
+        -- clear unused slots
+        for i=len+1,9 do
+            me.setInterfaceConfiguration(i, db.address, 0, 0)
+        end
         sock:send(sid .. ",1")
     elseif opcode == 0x5 then
         -- provide fluid
@@ -57,10 +61,15 @@ function sock:on_message(msg)
             -- 2) use that label to store the associated fluid drop into a db.
             me.store({ label = "drop of " .. label }, db.address, 1, 1)
             -- 3) set interface config with that fluid drop
-            if not me.setFluidInterfaceConfiguration(i, db.address, 1) then
+            -- tanks are 0-indexed for some reason
+            if not me.setFluidInterfaceConfiguration(i - 1, db.address, 1) then
                 sock:send(sid .. ",6")
                 return
             end
+        end
+        -- clear unused slots
+        for i=len+1,6 do
+            me.setFluidInterfaceConfiguration(i - 1, db.address, 0, 0)
         end
         sock:send(sid .. ",1")
     end
