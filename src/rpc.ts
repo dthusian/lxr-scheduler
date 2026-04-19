@@ -4,7 +4,9 @@ import { createInterface, Interface } from "readline";
 enum RpcOpcodes {
   Reset = 0x1,
   Move = 0x2,
-  Transfer = 0x3
+  Transfer = 0x3,
+  AeItem = 0x4,
+  AeFluid = 0x5
 }
 
 type RpcResponse<T> = { status: RpcStatus, data: T | null };
