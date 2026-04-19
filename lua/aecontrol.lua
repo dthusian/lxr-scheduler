@@ -27,7 +27,15 @@ function sock:on_message(msg)
             db.clear(1)
             local id = entries[i * 2 + 2]
             local meta = tonumber(entries[i * 2 + 3])
-            if (not db.set(1, id, meta, "")) or (not me.setInterfaceConfiguration(i, db.address, 1, 64)) then
+            local status, err = db.set(1, id, meta, "")
+            if not status then
+                print("err: " .. err)
+                sock:send(sid .. ",6")
+                return
+            end
+            status, err = me.setInterfaceConfiguration(i, db.address, 1, 64)
+            if not status then
+                print("err: " .. err)
                 sock:send(sid .. ",6")
                 return
             end

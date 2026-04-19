@@ -31,9 +31,6 @@ function validateData<T>(data: unknown[] | null, types: string[]): T | null {
 }
 
 function validateRpcData<T>(data: RpcResponse<unknown[]>, types: string[]): RpcResponse<T> {
-  if(data.status !== RpcStatus.Ok) {
-    throw new Error("Robot returned error " + data.status);
-  }
   return {
     status: data.status,
     data: validateData(data.data, types)
@@ -53,9 +50,9 @@ export class BaseRpc {
   nextSid: number;
   inflightReqs: { [x: number]: (res: RpcResponse<unknown[]>) => void };
 
-  constructor(conn: Socket) {
+  constructor(conn: Socket, startSid: number) {
     this.conn = conn;
-    this.nextSid = 1;
+    this.nextSid = startSid;
     this.inflightReqs = {};
     this.readline = createInterface(conn);
     this.readline.on("line", line => {
@@ -103,7 +100,7 @@ export class BaseRpc {
 
 export class RobotRpc extends BaseRpc {
   constructor(conn: Socket) {
-    super(conn);
+    super(conn, 100000);
   }
 
   async reset(): Promise<RpcResponse<[]>> {
@@ -121,7 +118,7 @@ export class RobotRpc extends BaseRpc {
 
 export class AeControlRpc extends BaseRpc {
   constructor(conn: Socket) {
-    super(conn);
+    super(conn, 200000);
   }
   
   async provideItems(items: [string, number][]): Promise<RpcResponse<[]>> {

@@ -63,7 +63,7 @@ end
 
 function Socketw:send(data)
     if self.socket then
-        return self.socket.write(data)
+        return self.socket.write(data .. "\n")
     end
     return false
 end

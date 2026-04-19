@@ -65,8 +65,8 @@ const jobs: JobDef[] = [
     itemIngredients: [
       { id: "gregtech:gt.metaitem.01", meta: 23356, amount: 4 },
       { id: "gregtech:gt.metaitem.01", meta: 23028, amount: 8 },
-      { id: "gregtech:blockmachines", meta: 1542, amount: 16 },
-      { id: "gregtech:blockmachines", meta: 1587, amount: 8 },
+      { id: "gregtech:gt.blockmachines", meta: 1542, amount: 16 },
+      { id: "gregtech:gt.blockmachines", meta: 1587, amount: 8 },
     ],
     fluidIngredients: [],
     itemsNotConsumed: [false, false, false, false]
@@ -174,7 +174,7 @@ setInterval(() => {
 
 setInterval(() => {
   if(controller) {
-    console.log("---");
+    /*console.log("---");
     controller.jobQueue().forEach(v => {
       let statusStr = "";
       if(v.status === JobStatus.Dispatched) {
@@ -190,6 +190,6 @@ setInterval(() => {
       }
       console.log(`${v.def.name} ${statusStr}`);
     });
-    console.log("---");
+    console.log("---");*/
   }
 }, 2000);

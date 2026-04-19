@@ -85,7 +85,7 @@ function printTable(tbl)
 end
 
 
-local g_facingDir = nil
+local g_facingDir = sides.west
 function sock:on_message(msg)
     print("msg: " .. msg)
     local entries = split(msg, "([^,]+)")
@@ -146,12 +146,10 @@ function sock:on_message(msg)
         local interactSide = sides.front
 
         -- check if machine is there
-        if not isMachineOperation[subop] then
-            if ic.getInventorySize(interactSide) == nil then
-                print("no machine inventory on side")
-                sock:send(sid .. ",4")
-                return
-            end
+        if ic.getInventorySize(interactSide) == nil then
+            print("no machine inventory on side")
+            sock:send(sid .. ",4")
+            return
         end
 
         -- item transfer on slotted inventories
