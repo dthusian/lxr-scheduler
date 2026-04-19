@@ -1,5 +1,6 @@
 local Socketw = require("lxsocketw")
 local sock = Socketw.new()
+local component = require("component")
 
 local db = component.database
 local me = component.me_interface
@@ -19,54 +20,59 @@ function sock:on_message(msg)
     local opcode = tonumber(entries[2])
     print("sid: " .. sid .. "; opcode: " .. opcode)
 
-    local status, err = pcall(function()
-        if opcode == 0x4 then
-            -- provide item
-            local len = tonumber(entries[3])
-            for i=1,len do
-                db.clear(1)
-                local id = entries[i * 2 + 2]
-                local meta = tonumber(entries[i * 2 + 3])
-                if (not db.set(1, id, meta, "")) or (not me.setInterfaceConfiguration(i, db.address, 1, 64)) then
-                    sock:send(sid .. ",6")
-                    return
-                end
+    if opcode == 0x4 then
+        -- provide item
+        local len = tonumber(entries[3])
+        for i=1,len do
+            db.clear(1)
+            local id = entries[i * 2 + 2]
+            local meta = tonumber(entries[i * 2 + 3])
+            if (not db.set(1, id, meta, "")) or (not me.setInterfaceConfiguration(i, db.address, 1, 64)) then
+                sock:send(sid .. ",6")
+                return
             end
-            sock:send(sid .. ",1")
-        elseif opcode == 0x5 then
-            -- provide fluid
-            local len = tonumber(entries[3])
-            for i=1,len do
-                db.clear(1)
-                local id = entries[i + 3]
-                -- there appears to be no better way to do this unfortunately
-                -- 1) find fluid in network and get its label
-                local fluids = me.getFluidsInNetwork()
-                local label = nil
-                for i, v in ipairs(fluids) do
-                    if v.name == id then
-                        label = v.label
-                        break
-                    end
-                end
-                if label == nil then
-                    -- fluid not found
-                    sock:send(sid .. ",5")
-                    return
-                end
-                -- 2) use that label to store the associated fluid drop into a db.
-                me.store({ label = "drop of " .. label }, db.address, 1, 1)
-                -- 3) set interface config with that fluid drop
-                if not me.setFluidInterfaceConfiguration(i, db.address, 1) then
-                    sock:send(sid .. ",6")
-                    return
-                end
-            end
-            sock:send(sid .. ",1")
         end
-    end)
-    
-    if status then
-        sock:send(sid .. ",6")
+        sock:send(sid .. ",1")
+    elseif opcode == 0x5 then
+        -- provide fluid
+        local len = tonumber(entries[3])
+        for i=1,len do
+            db.clear(1)
+            local id = entries[i + 3]
+            -- there appears to be no better way to do this unfortunately
+            -- 1) find fluid in network and get its label
+            local fluids = me.getFluidsInNetwork()
+            local label = nil
+            for i, v in ipairs(fluids) do
+                if v.name == id then
+                    label = v.label
+                    break
+                end
+            end
+            if label == nil then
+                -- fluid not found
+                sock:send(sid .. ",5")
+                return
+            end
+            -- 2) use that label to store the associated fluid drop into a db.
+            me.store({ label = "drop of " .. label }, db.address, 1, 1)
+            -- 3) set interface config with that fluid drop
+            if not me.setFluidInterfaceConfiguration(i, db.address, 1) then
+                sock:send(sid .. ",6")
+                return
+            end
+        end
+        sock:send(sid .. ",1")
     end
+end
+
+function sock:on_ready(msg)
+    print("connected")
+end
+
+sock:connect("localhost", 3001)
+
+while true do
+    sock:poll(512)
+    os.sleep(0.05)
 end
