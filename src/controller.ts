@@ -1,3 +1,4 @@
+import { FluidStack, ItemStack, Side } from "./defs";
 import { AeControlRpc, RobotRpc, RpcStatus, TransferOps } from "./rpc";
 
 export type InventoryConfig = {

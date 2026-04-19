@@ -1,6 +1,6 @@
-type ItemStack = { id: string, meta: number, amount: number };
-type FluidStack = { id: string, amount: number };
-enum Side {
+export type ItemStack = { id: string, meta: number, amount: number };
+export type FluidStack = { id: string, amount: number };
+export enum Side {
   BOTTOM = 0,
   TOP = 1,
   NORTH = 2,

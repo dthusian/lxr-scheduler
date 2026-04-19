@@ -1,5 +1,7 @@
 import { Socket } from "net";
 import { createInterface, Interface } from "readline";
+import { Side } from "./defs";
+import { logDebug } from "./log";
 
 enum RpcOpcodes {
   Reset = 0x1,
@@ -58,6 +60,7 @@ export class BaseRpc {
     this.readline = createInterface(conn);
     this.readline.on("line", line => {
       try {
+        logDebug(`rpc: read: ${line}`);
         this.processRes(line);
       } catch(err) {}
     });
@@ -90,7 +93,8 @@ export class BaseRpc {
           throw new Error("Only strings and numbers allowed in argument list");
         }
       });
-      const requestStr = `${sid},${opcode},${args.toString()}`;
+      const requestStr = `${sid},${opcode},${args.toString()}\n`;
+      logDebug(`rpc: write: ${requestStr.trim()}`);
       this.conn.write(Buffer.from(requestStr, "utf8"));
       this.inflightReqs[sid] = resolve;
     });

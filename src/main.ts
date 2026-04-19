@@ -1,6 +1,7 @@
 import { createServer } from "net";
 import { AeControlRpc, RobotRpc } from "./rpc";
 import { Controller, RobotControllerConfig as ControllerConfig, JobDef, JobStatus } from "./controller";
+import { Side } from "./defs";
 
 const config: ControllerConfig = {
   machines: {
