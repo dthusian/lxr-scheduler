@@ -155,7 +155,7 @@ export class Controller {
           return this.robotRpc.transfer(
             TransferOps.ItemMachineToSelf,
             this.config.aeInterface.side,
-            i, i,
+            i + 1, i + 1,
             v.amount,
             v.id,
             v.meta
@@ -172,9 +172,6 @@ export class Controller {
             0
           ));
         }
-        // clear interface
-        await this.aeRpc.provideItems([]);
-        await this.aeRpc.provideFluids([]);
 
         // some ingredient take resulted in error that isn't missing-items
         const responses = await Promise.all(proms);
@@ -182,6 +179,8 @@ export class Controller {
           job.status = JobStatus.Error;
           return true;
         }
+        // clear interface asynchronously with everythign below to save time
+        const interfaceClrProm = Promise.all([this.aeRpc.provideItems([]), this.aeRpc.provideFluids([])]);
 
         // return ingredients if they're not all present
         if(responses.some(v => v.status === RpcStatus.ErrMissingItems)) {
@@ -189,7 +188,7 @@ export class Controller {
             this.robotRpc.transfer(
               TransferOps.ItemSelfToMachine,
               this.config.aeInterface.side,
-              i, i,
+              i + 1, i + 1,
               v.amount,
               v.id,
               v.meta
@@ -223,7 +222,7 @@ export class Controller {
           this.robotRpc.transfer(
             TransferOps.ItemSelfToMachine,
             inv.side,
-            i, inv.slots[i],
+            i + 1, inv.slots[i],
             v.amount,
             v.id,
             v.meta
@@ -263,7 +262,7 @@ export class Controller {
             return this.robotRpc.transfer(
               TransferOps.ItemMachineToSelf,
               machineCfg.inputInventory.side,
-              i, inv.slots[i],
+              inv.slots[i], i + 1,
               v.amount,
               v.id,
               v.meta

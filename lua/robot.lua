@@ -6,6 +6,7 @@ local component = require("component")
 local sides = require("sides")
 
 local ic = component.inventory_controller
+local tc = component.tank_controller
 
 local sock = Socketw.new()
 
@@ -85,7 +86,7 @@ function printTable(tbl)
 end
 
 
-local g_facingDir = sides.west
+local g_facingDir = "WEST"
 function sock:on_message(msg)
     print("msg: " .. msg)
     local entries = split(msg, "([^,]+)")
@@ -119,13 +120,13 @@ function sock:on_message(msg)
     elseif opcode == 3 then
         print("opcode3")
         local isItemOperation = {
-            [0] = true, [1] = true, [2] = true, [3] = true
+            [0] = true, [1] = true
         }
         local isFluidOperation = {
-            [4] = true, [5] = true, [6] = true, [7] = true
+            [4] = true, [5] = true
         }
         local isSrcSelf = {
-            [0] = true, [2] = true, [4] = true, [6] = true,
+            [0] = true, [4] = true
         }
 
         local subop = tonumber(entries[2 + 1])
@@ -199,13 +200,13 @@ function sock:on_message(msg)
             local dstCapacity = 0
 
             if isSrcSelf[subop] then
-                srcStack = ic.getFluidInInternalTank(srcSlot)
-                dstStack = ic.getFluidInTank(interactSide, dstSlot)
-                dstCapacity = ic.getTankCapacity(interactSide, dstSlot)
+                srcStack = tc.getFluidInInternalTank(srcSlot)
+                dstStack = tc.getFluidInTank(interactSide, dstSlot)
+                dstCapacity = tc.getTankCapacity(interactSide, dstSlot)
             else
-                srcStack = ic.getFluidInTank(interactSide, srcSlot)
-                dstStack = ic.getFluidInInternalTank(dstSlot)
-                dstCapacity = ic.getInternalTankCapacity(dstSlot)
+                srcStack = tc.getFluidInTank(interactSide, srcSlot)
+                dstStack = tc.getFluidInInternalTank(dstSlot)
+                dstCapacity = tc.getInternalTankCapacity(dstSlot)
             end
 
 
@@ -222,9 +223,9 @@ function sock:on_message(msg)
 
             local success, err
             if isSrcSelf[subop] then
-                success, err = ic.transferFluidToTank(interactSide, dstSlot, amount)
+                success, err = tc.transferFluidToTank(interactSide, dstSlot, amount)
             else
-                success, err = ic.transferFluidFromTank(interactSide, srcSlot, amount)
+                success, err = tc.transferFluidFromTank(interactSide, srcSlot, amount)
             end
         
             if not success then
