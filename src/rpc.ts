@@ -116,6 +116,10 @@ export class RobotRpc extends BaseRpc {
 }
 
 export class AeControlRpc extends BaseRpc {
+  constructor(conn: Socket) {
+    super(conn);
+  }
+  
   async provideItems(items: [string, number][]): Promise<RpcResponse<[]>> {
     const args = ([items.length] as (string | number)[]).concat(items.flat());
     return validateRpcData<[]>(await this.rpc(RpcOpcodes.AeItem, args), []);

@@ -25,12 +25,12 @@ export type RobotControllerConfig = {
 };
 
 export type JobDef = {
+  name: string,
   machineId: string,
   expectedTicks: number,
   itemIngredients: ItemStack[],
   fluidIngredients: FluidStack[],
-  itemsNotConsumed: boolean[],
-  results: ItemStack[],
+  itemsNotConsumed: boolean[]
 };
 
 export enum JobStatus {
@@ -144,10 +144,13 @@ export class Controller {
           return true;
         }
 
-        // try to get ingredients
-        await this.moveRobot(this.config.aeInterface.x, this.config.aeInterface.z);
-        await this.aeRpc.provideItems(job.def.itemIngredients.map(v => [v.id, v.meta]));
-        const proms = job.def.itemIngredients.map((v, i) => {
+        // try to get ingredients and first fluid (fastpath because singleblocks are max. 1 fluid)
+        await Promise.all([
+          this.moveRobot(this.config.aeInterface.x, this.config.aeInterface.z),
+          this.aeRpc.provideItems(job.def.itemIngredients.map(v => [v.id, v.meta])),
+          this.aeRpc.provideFluids(job.def.fluidIngredients.map(v => v.id))
+        ]);
+        let proms = job.def.itemIngredients.map((v, i) => {
           return this.robotRpc.transfer(
             TransferOps.ItemMachineToSelf,
             this.config.aeInterface.side,
@@ -157,8 +160,20 @@ export class Controller {
             v.meta
           );
         });
+        if(job.def.fluidIngredients.length) {
+          const stack = job.def.fluidIngredients[0];
+          proms.push(this.robotRpc.transfer(
+            TransferOps.FluidMachineToSelf,
+            this.config.aeInterface.side,
+            1, 1,
+            stack.amount,
+            stack.id,
+            0
+          ));
+        }
         // clear interface
         await this.aeRpc.provideItems([]);
+        await this.aeRpc.provideFluids([]);
 
         // some ingredient take resulted in error that isn't missing-items
         const responses = await Promise.all(proms);
@@ -169,7 +184,7 @@ export class Controller {
 
         // return ingredients if they're not all present
         if(responses.some(v => v.status === RpcStatus.ErrMissingItems)) {
-          const res = await Promise.all(job.def.itemIngredients.map((v, i) =>
+          const proms = job.def.itemIngredients.map((v, i) =>
             this.robotRpc.transfer(
               TransferOps.ItemSelfToMachine,
               this.config.aeInterface.side,
@@ -177,7 +192,20 @@ export class Controller {
               v.amount,
               v.id,
               v.meta
-            )));
+            ));
+          if(job.def.fluidIngredients.length) {
+            const stack = job.def.fluidIngredients[0];
+            proms.push(this.robotRpc.transfer(
+              TransferOps.FluidSelfToMachine,
+              this.config.aeInterface.side,
+              1, 1,
+              stack.amount,
+              stack.id,
+              0
+            ));
+          }
+          const res = await Promise.all(proms);
+          
           if(res.some(v => v.status !== RpcStatus.Ok)) {
             job.status = JobStatus.Error;
           } else {
@@ -190,7 +218,7 @@ export class Controller {
         const machineCfg = this.config.machines[job.def.machineId];
         const inv = machineCfg.inputInventory;
         await this.moveRobot(inv.x, inv.z);
-        const res = await Promise.all(job.def.itemIngredients.map((v, i) => 
+        proms = job.def.itemIngredients.map((v, i) => 
           this.robotRpc.transfer(
             TransferOps.ItemSelfToMachine,
             inv.side,
@@ -198,13 +226,32 @@ export class Controller {
             v.amount,
             v.id,
             v.meta
-          )));
+          )
+        );
+        if(job.def.fluidIngredients.length) {
+          const stack = job.def.fluidIngredients[0];
+          const tank0 = machineCfg.inputTanks[0];
+          await this.moveRobot(tank0.x, tank0.z);
+          proms.push(this.robotRpc.transfer(
+            TransferOps.FluidSelfToMachine,
+            tank0.side,
+            1, 1,
+            stack.amount,
+            stack.id,
+            0
+          ));
+        }
+        const res = await Promise.all(proms);
         if(res.some(v => v.status !== RpcStatus.Ok)) {
           job.status = JobStatus.Error;
         } else {
           job.status = JobStatus.Running;
           job.expectedCompletionTime = Date.now() + 50 * job.def.expectedTicks;
         }
+
+        // gather fluid ingredients
+        //TODO
+
         return true;
       } else if(job.status === JobStatus.Running && job.expectedCompletionTime && job.expectedCompletionTime < Date.now()) {
         // collect non-consumed ingredients
