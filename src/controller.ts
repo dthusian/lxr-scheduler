@@ -260,7 +260,7 @@ export class Controller {
         if(job.def.itemsNotConsumed.some(v => v)) {
           const inv = machineCfg.inputInventory;
           await this.moveRobot(machineCfg.inputInventory.x, machineCfg.inputInventory.z);
-          let res = await Promise.all(job.def.itemIngredients.map((v, i) => {
+          await Promise.all(job.def.itemIngredients.map((v, i) => {
             if(job.def.itemsNotConsumed[i]) {
               return this.robotRpc.transfer(
                 TransferOps.ItemMachineToSelf,
@@ -274,18 +274,15 @@ export class Controller {
               return Promise.resolve();
             }
           }));
-          if(res.some(v => v && v.status !== RpcStatus.Ok)) {
-            job.status = JobStatus.Error;
-          }
           await Promise.all([
             this.moveRobot(this.config.aeInterface.x, this.config.aeInterface.z),
             this.aeRpc.provideItems([]),
             this.aeRpc.provideFluids([])
           ]);
-          res = await Promise.all(job.def.itemIngredients.map((v, i) => {
+          await Promise.all(job.def.itemIngredients.map((v, i) => {
             if(job.def.itemsNotConsumed[i]) {
               return this.robotRpc.transfer(
-                TransferOps.ItemMachineToSelf,
+                TransferOps.ItemSelfToMachine,
                 machineCfg.inputInventory.side,
                 i + 1, i + 1,
                 v.amount,
