@@ -172,9 +172,9 @@ setInterval(() => {
   }
 }, 500);
 
-setInterval(() => {
+process.stdin.on("data", () => {
   if(controller) {
-    /*console.log("---");
+    console.log("---");
     controller.jobQueue().forEach(v => {
       let statusStr = "";
       if(v.status === JobStatus.Dispatched) {
@@ -190,6 +190,6 @@ setInterval(() => {
       }
       console.log(`${v.def.name} ${statusStr}`);
     });
-    console.log("---");*/
+    console.log("---");
   }
-}, 2000);
+});

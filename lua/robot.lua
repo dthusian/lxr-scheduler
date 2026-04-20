@@ -206,9 +206,8 @@ function sock:on_message(msg)
             else
                 srcStack = tc.getFluidInTank(interactSide, srcSlot)
                 dstStack = tc.getFluidInInternalTank(dstSlot)
-                dstCapacity = tc.getInternalTankCapacity(dstSlot)
+                dstCapacity = 16000
             end
-
 
             if not verifyFluidStack(srcStack, amount, expectId) then
                print("expected fluid " .. amount .. " of " .. expectId)

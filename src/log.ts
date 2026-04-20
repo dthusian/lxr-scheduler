@@ -1,5 +1,5 @@
 
-const LOG_LEVEL = 4;
+export let LOG_LEVEL = 4;
 
 export function logError(s: string) {
   if(LOG_LEVEL >= 1) {

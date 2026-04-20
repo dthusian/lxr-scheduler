@@ -34,10 +34,9 @@ RPCs
 
 statuses
 - 0x1: ok
-- 0x2: error, unexpected item (expectId or expectMeta doesn't match)
+- 0x2: error, unexpected item (amount, expectId, or expectMeta doesn't match)
 - 0x3: error, cannot move (robot is unable to move to that position)
 - 0x4: error, no inventory there/invalid slot (no inventory at that position or the slot was invalid)
-- 0x5: error, missing/not enough items (no itemstack in that slot or there was not enough to fill amount)
 - 0x6: error, other (lua error or something else)
 
 ## AE2 Interface
