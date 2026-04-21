@@ -40,7 +40,7 @@ function verifyItemStack(tbl, amount, name, damage)
 end
 
 function verifyFluidStack(tbl, amount, name)
-    if tank and tank.name == name and tonumber(tank.amount) >= tonumber(amount) then
+    if tbl and tbl.name == name and tonumber(tbl.amount) >= tonumber(amount) then
         return true
     end
     return false
@@ -201,11 +201,11 @@ function sock:on_message(msg)
                 robot.select(srcSlot)
                 success, err = tc.drain(amount)
                 if not success then print("err: " .. err) sock:send(sid .. ",6") return end
-                success, err = tc.transferFluidToTank(interactSide, dstSlot, amount)
+                success, err = robot.fill(interactSide, dstSlot, amount)
                 if not success then print("err: " .. err) sock:send(sid .. ",6") return end
             else
                 robot.select(dstSlot)
-                success, err = tc.transferFluidFromTank(interactSide, srcSlot, amount)
+                success, err = robot.drain(interactSide, srcSlot, amount)
                 if not success then print("err: " .. err) sock:send(sid .. ",6") return end
                 success, err = tc.fill(amount)
                 if not success then print("err: " .. err) sock:send(sid .. ",6") return end

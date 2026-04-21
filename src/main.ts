@@ -1,6 +1,6 @@
 import { createServer } from "net";
 import { AeControlRpc, RobotRpc } from "./rpc";
-import { Controller, RobotControllerConfig as ControllerConfig, JobDef, JobStatus } from "./controller";
+import { Controller, ControllerConfig as ControllerConfig, JobDef, JobStatus } from "./controller";
 import { Side } from "./defs";
 
 const config: ControllerConfig = {
@@ -71,7 +71,8 @@ const config: ControllerConfig = {
   },
   robotItemSlots: [1, 2, 3, 4, 5, 6, 7, 8, 9],
   robotTankSlots: [11, 12, 13, 14, 15, 16],
-  robotScratchSlot: 10
+  robotScratchSlot: 10,
+  timeMarginTicks: 20
 };
 
 const jobs: JobDef[] = [
@@ -203,10 +204,16 @@ process.stdin.on("data", () => {
       } else if(v.status === JobStatus.Running) {
         if(v.expectedCompletionTime) {
           const dur = v.expectedCompletionTime - Date.now();
-          statusStr = "Running: " + Math.floor(dur / 1000);
+          if(dur < 0) {
+            statusStr = "Awaiting collection";
+          } else {
+            statusStr = "Running: " + Math.floor(dur / 1000);
+          }
         } else {
           statusStr = "Running";
         }
+      } else if(v.status === JobStatus.Complete) {
+        statusStr = "Complete";
       } else if (v.status === JobStatus.Error) {
         statusStr = "Error";
       }

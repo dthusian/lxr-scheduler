@@ -23,13 +23,14 @@ export type MachineConfig = {
   itemMeta: number
 };
 
-export type RobotControllerConfig = {
+export type ControllerConfig = {
   machines: { [id: string]: MachineConfig },
   provideInterface: InventoryConfig,
   dumpInterface: InventoryConfig,
   robotItemSlots: number[],
   robotTankSlots: number[],
-  robotScratchSlot: number
+  robotScratchSlot: number,
+  timeMarginTicks: number,
 };
 
 export type JobDef = {
@@ -46,7 +47,8 @@ export enum JobStatus {
   MissingIngredients,
   MissingMachine,
   Running,
-  Error
+  Error,
+  Complete
 };
 
 export type Job = {
@@ -69,7 +71,7 @@ async function asyncSeqFilter<T>(arr: T[], cb: (t: T) => Promise<boolean>): Prom
 export class Controller {
   robotRpc: RobotRpc;
   aeRpc: AeControlRpc;
-  config: RobotControllerConfig;
+  config: ControllerConfig;
 
   nextJobId: number;
   jobs: Job[];
@@ -78,7 +80,7 @@ export class Controller {
   ticking: boolean;
   machineUsed: { [x: string]: boolean }
 
-  constructor(robotRpc: RobotRpc, aeRpc: AeControlRpc, config: RobotControllerConfig) {
+  constructor(robotRpc: RobotRpc, aeRpc: AeControlRpc, config: ControllerConfig) {
     this.robotRpc = robotRpc;
     this.aeRpc = aeRpc;
     this.config = config;
@@ -234,7 +236,7 @@ export class Controller {
 
           // committed now
           job.status = JobStatus.Running;
-          job.expectedCompletionTime = Date.now() + 50 * job.def.expectedTicks;
+          job.expectedCompletionTime = Date.now() + 50 * (job.def.expectedTicks + this.config.timeMarginTicks);
           this.machineUsed[job.def.machineId] = true;
 
           return true;
@@ -257,6 +259,8 @@ export class Controller {
           await this.moveRobot(this.config.dumpInterface.x, this.config.dumpInterface.z);
           await this.robotRpc.dumpInventory(this.config.dumpInterface.side);
         }
+        job.status = JobStatus.Complete;
+        this.machineUsed[job.def.machineId] = false;
         return true;
       }
       return true;
