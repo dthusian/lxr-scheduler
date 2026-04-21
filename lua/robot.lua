@@ -106,9 +106,16 @@ function sock:on_message(msg)
         --print("srcSlot/dstSlot amount " .. srcSlot .. "/" .. dstSlot .. " " .. amount)
         --print("id:meta " .. expectId .. ":" .. expectMeta)
 
-        local targetDir = Direction.fromSide[side]
-        g_facingDir = turnTo(g_facingDir, targetDir)
-        local interactSide = sides.front
+        local interactSide = nil
+        if side == sides.up then
+            interactSide = sides.up
+        elseif side == sides.down then
+            interactSide = sides.down
+        else
+            local targetDir = Direction.fromSide[side]
+            g_facingDir = turnTo(g_facingDir, targetDir)
+            interactSide = sides.front
+        end
 
         -- check if machine is there
         if ic.getInventorySize(interactSide) == nil then
@@ -220,6 +227,11 @@ function sock:on_message(msg)
             robot.select(i)
             ic.dropIntoSlot(interactSide, i)
         end
+        if ic.getStackInInternalSlot(10) then
+            os.sleep(0.5) -- wait for interface to take item
+            robot.select(10)
+            ic.dropIntoSlot(interactSide, 1)
+        end
         sock:send(sid .. ",1")
     elseif opcode == 7 then
         local id = entries[2 + 1]
@@ -234,16 +246,24 @@ function sock:on_message(msg)
         end
 
         -- break/replace
-        success, err = robot.swingUp()
+        local success, err = robot.swingUp()
         if not success then print("err: " .. err) sock:send(sid .. ",6") return end
+        local found = false 
         for i=1,16 do
             -- find the machine
             local stack = ic.getStackInInternalSlot(i)
-            if stack ~= nil and stack.name ~= id and stack.damage ~= meta then
+            if stack ~= nil and stack.name == id and stack.damage == meta then
                 robot.select(i)
-                robot.placeUp() -- place it
+                found = true
+                local success, err = robot.placeUp() -- place it
+                if not success then print("err: " .. err) sock:send(sid .. ",6") return end
                 break
             end
+        end
+        if not found then
+            print("err: machine item not found")
+            sock:send(sid .. ",6")
+            return
         end
         sock:send(sid .. ",1")
     elseif opcode == 8 then

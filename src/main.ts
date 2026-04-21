@@ -9,18 +9,18 @@ const config: ControllerConfig = {
       inputInventory: {
         x: 0,
         z: -2,
-        side: Side.WEST,
+        side: Side.TOP,
         slots: [6, 7]
       },
       inputTanks: [],
       itemId: "gregtech:gt.blockmachines",
-      itemMeta: 323
+      itemMeta: 353
     },
     extruder: {
       inputInventory: {
         x: 0,
         z: -3,
-        side: Side.WEST,
+        side: Side.TOP,
         slots: [6, 7]
       },
       inputTanks: [],
@@ -31,14 +31,14 @@ const config: ControllerConfig = {
       inputInventory: {
         x: 0,
         z: -4,
-        side: Side.WEST,
+        side: Side.TOP,
         slots: [6, 7, 8, 9, 10, 11, 12, 13, 14]
       },
       inputTanks: [
         {
           x: 0,
           z: -4,
-          side: Side.WEST,
+          side: Side.TOP,
           tankIndex: 1
         }
       ],
@@ -201,7 +201,12 @@ process.stdin.on("data", () => {
       } else if(v.status === JobStatus.MissingMachine) {
         statusStr = "Waiting for machine";
       } else if(v.status === JobStatus.Running) {
-        statusStr = "Running: " + (Date.now());
+        if(v.expectedCompletionTime) {
+          const dur = v.expectedCompletionTime - Date.now();
+          statusStr = "Running: " + Math.floor(dur / 1000);
+        } else {
+          statusStr = "Running";
+        }
       } else if (v.status === JobStatus.Error) {
         statusStr = "Error";
       }
