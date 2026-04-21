@@ -31,6 +31,16 @@ RPCs
   - 0x1 item machine->self
   - 0x4 fluid self->machine
   - 0x5 fluid machine->self
+  - item transfer use inventory controller on slots 1-9
+  - fluid transfers uses tank controller on slots 11-16 (preload these with inventory fluid containers)
+  - item slot 10 reserved for scratch space
+- 0x6: dumpInventory `(side: number) -> ()`
+  - simplifies controller code and must be used if the state of the device is unknown
+- 0x7: breakReplace `(blockItemId: string, blockItemMeta: number) -> ()`
+  - break side and place block back
+  - always uses up direction
+- 0x8: equip `(slot: number) -> ()`
+  - equips item in given slot
 
 statuses
 - 0x1: ok
@@ -38,6 +48,8 @@ statuses
 - 0x3: error, cannot move (robot is unable to move to that position)
 - 0x4: error, no inventory there/invalid slot (no inventory at that position or the slot was invalid)
 - 0x6: error, other (lua error or something else)
+- 0x7: error, block not dropped
+- 0x8: error, no wrench to use
 
 ## AE2 Interface
 

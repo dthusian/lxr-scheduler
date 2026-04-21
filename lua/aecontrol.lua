@@ -40,10 +40,6 @@ function sock:on_message(msg)
                 return
             end
         end
-        -- clear unused slots
-        for i=len+1,9 do
-            me.setInterfaceConfiguration(i, db.address, 0, 0)
-        end
         sock:send(sid .. ",1")
     elseif opcode == 0x5 then
         -- provide fluid
@@ -74,11 +70,7 @@ function sock:on_message(msg)
                 sock:send(sid .. ",6")
                 return
             end
-        end
-        -- clear unused slots
-        for i=len+1,6 do
-            me.setFluidInterfaceConfiguration(i - 1, db.address, 0, 0)
-        end
+        end 
         sock:send(sid .. ",1")
     end
 end

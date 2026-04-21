@@ -8,7 +8,10 @@ enum RpcOpcodes {
   Move = 0x2,
   Transfer = 0x3,
   AeItem = 0x4,
-  AeFluid = 0x5
+  AeFluid = 0x5,
+  Dump = 0x6,
+  Replace = 0x7,
+  Equip = 0x8
 }
 
 export enum RpcStatus {
@@ -113,6 +116,18 @@ export class RobotRpc extends BaseRpc {
 
   async transfer(subOp: TransferOps, side: Side, srcSlot: number, dstSlot: number, amount: number, expectId: string, expectMeta: number): Promise<RpcResponse<[]>> {
     return validateRpcData<[]>(await this.rpc(RpcOpcodes.Transfer, [subOp, side, srcSlot, dstSlot, amount, expectId, expectMeta]), []);
+  }
+
+  async dumpInventory(side: Side) {
+    return validateRpcData<[]>(await this.rpc(RpcOpcodes.Dump, [side]), []);
+  }
+
+  async breakReplace(id: string, meta: number) {
+    return validateRpcData<[]>(await this.rpc(RpcOpcodes.Replace, [id, meta]), []);
+  }
+
+  async equipTool(slot: number) {
+    return validateRpcData<[]>(await this.rpc(RpcOpcodes.Equip, [slot]), []);
   }
 }
 

@@ -12,7 +12,9 @@ const config: ControllerConfig = {
         side: Side.WEST,
         slots: [6, 7]
       },
-      inputTanks: []
+      inputTanks: [],
+      itemId: "gregtech:gt.blockmachines",
+      itemMeta: 323
     },
     extruder: {
       inputInventory: {
@@ -21,7 +23,9 @@ const config: ControllerConfig = {
         side: Side.WEST,
         slots: [6, 7]
       },
-      inputTanks: []
+      inputTanks: [],
+      itemId: "gregtech:gt.blockmachines",
+      itemMeta: 283
     },
     assembler: {
       inputInventory: {
@@ -37,7 +41,9 @@ const config: ControllerConfig = {
           side: Side.WEST,
           tankIndex: 1
         }
-      ]
+      ],
+      itemId: "gregtech:gt.blockmachines",
+      itemMeta: 213
     },
     polarizer: {
       inputInventory: {
@@ -46,15 +52,26 @@ const config: ControllerConfig = {
         side: Side.WEST,
         slots: [6]
       },
-      inputTanks: []
+      inputTanks: [],
+      itemId: "gregtech:gt.blockmachines",
+      itemMeta: 553
     }
   },
-  aeInterface: {
+  provideInterface: {
     x: 0,
     z: 0,
     side: Side.WEST,
     slots: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-  }
+  },
+  dumpInterface: {
+    x: 0,
+    z: 0,
+    side: Side.EAST,
+    slots: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  },
+  robotItemSlots: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  robotTankSlots: [11, 12, 13, 14, 15, 16],
+  robotScratchSlot: 10
 };
 
 const jobs: JobDef[] = [
