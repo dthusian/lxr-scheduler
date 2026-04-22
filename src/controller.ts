@@ -68,6 +68,10 @@ async function asyncSeqFilter<T>(arr: T[], cb: (t: T) => Promise<boolean>): Prom
   return arr.filter((v, i) => filter[i]);
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise(r => setTimeout(r, ms));
+} 
+
 export class Controller {
   robotRpc: RobotRpc;
   aeRpc: AeControlRpc;
@@ -162,9 +166,9 @@ export class Controller {
           // move robot to provider and provide items
           await Promise.all([
             this.moveRobot(this.config.provideInterface.x, this.config.provideInterface.z),
-            this.aeRpc.provideItems(job.def.itemIngredients.map(v => [v.id, v.meta])),
-            this.aeRpc.provideFluids(job.def.fluidIngredients.map(v => v.id))
+            this.aeRpc.provideItems(job.def.itemIngredients.map(v => [v.id, v.meta]))
           ]);
+          await sleep(200);
 
           let proms = job.def.itemIngredients.map((v, i) => {
             return this.robotRpc.transfer(
@@ -175,17 +179,22 @@ export class Controller {
               v.id,
               v.meta
             );
-          }).concat(job.def.fluidIngredients.map((v, i) => {
-            return this.robotRpc.transfer(
+          });
+          let responses = await Promise.all(proms);
+
+          for(let [v, i] of job.def.fluidIngredients.map((v, i) => [v, i] as [FluidStack, number])) {
+            await this.aeRpc.provideFluids([v.id]);
+            await sleep(200);
+            const res = await this.robotRpc.transfer(
               TransferOps.FluidMachineToSelf,
               this.config.provideInterface.side,
-              i + 1, this.config.robotTankSlots[i],
+              1, this.config.robotTankSlots[i],
               v.amount,
               v.id,
               0
             );
-          }));
-          let responses = await Promise.all(proms);
+            responses.push(res);
+          }
 
           // some ingredient take resulted in error that isn't missing-items
           if(responses.some(v => v.status !== RpcStatus.Ok && v.status !== RpcStatus.ErrUnexpectedItem)) {

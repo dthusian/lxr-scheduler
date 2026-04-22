@@ -1,5 +1,5 @@
 import { createServer } from "net";
-import { AeControlRpc, RobotRpc } from "./rpc";
+import { AeControlRpc, RobotRpc, TransferOps } from "./rpc";
 import { Controller, ControllerConfig as ControllerConfig, JobDef, JobStatus } from "./controller";
 import { Side } from "./defs";
 
@@ -49,7 +49,7 @@ const config: ControllerConfig = {
       inputInventory: {
         x: 0,
         z: -5,
-        side: Side.WEST,
+        side: Side.TOP,
         slots: [6]
       },
       inputTanks: [],
@@ -89,7 +89,7 @@ const jobs: JobDef[] = [
     fluidIngredients: [],
     itemsNotConsumed: [false, false, false, false]
   },
-  {
+  /*{
     name: "8 * Titanium Rod",
     machineId: "extruder",
     expectedTicks: 192,
@@ -121,7 +121,7 @@ const jobs: JobDef[] = [
     ],
     fluidIngredients: [],
     itemsNotConsumed: [false, true]
-  },
+  },*/
   {
     name: "8 * 2x Aluminium Cable",
     machineId: "assembler",
@@ -135,7 +135,7 @@ const jobs: JobDef[] = [
     ],
     itemsNotConsumed: [false, true]
   },
-  {
+  /*{
     name: "4 * Magnetic Neodymium Rod",
     machineId: "polarizer",
     expectedTicks: 256,
@@ -155,19 +155,18 @@ const jobs: JobDef[] = [
     ],
     fluidIngredients: [],
     itemsNotConsumed: [false, true]
-  }
+  }*/
 ];
 
 let robotRpc: RobotRpc | undefined = undefined;
 let aeRpc: AeControlRpc | undefined = undefined;
 let controller: Controller | undefined = undefined;
+let controllerMainProm: Promise<void> = Promise.resolve();
 
 function checkAndCreateController() {
   if(robotRpc && aeRpc && !controller) {
     const myController = new Controller(robotRpc, aeRpc, config);
-    jobs.forEach(v => {
-      myController.submit(v, () => console.log(`job ${v.name} completed`));
-    });
+    controllerMainProm = controllerMain(myController);
     controller = myController;
   }
 }
@@ -184,9 +183,13 @@ createServer(sock => {
   checkAndCreateController();
 }).listen(3001);
 
-setInterval(() => {
+setInterval(async () => {
   if(controller) {
     controller.tick();
+    if(controller.jobQueue().every(v => v.status === JobStatus.Complete || v.status === JobStatus.Error)) {
+      await controllerMainProm;
+      process.exit(0);
+    }
   }
 }, 500);
 
@@ -222,3 +225,9 @@ process.stdin.on("data", () => {
     console.log("---");
   }
 });
+
+async function controllerMain(controller: Controller) {
+  jobs.forEach(v => {
+    controller.submit(v, () => console.log(`job ${v.name} completed`));
+  });
+}

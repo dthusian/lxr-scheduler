@@ -178,7 +178,7 @@ function sock:on_message(msg)
                 dstStack = tc.getFluidInTankInSlot(dstSlot)
             end
 
-            if dstStack ~= nil then
+            if dstStack ~= nil and dstStack.amount > 0 then
                 print("dst not empty")
                 sock:send(sid .. ",6")
                 return
@@ -187,6 +187,7 @@ function sock:on_message(msg)
             if tc.getFluidInInternalTank(1) ~= nil then
                 print("internal tank not empty")
                 sock:send(sid .. ",6")
+                return
             end
 
             if not verifyFluidStack(srcStack, amount, expectId) then
@@ -201,11 +202,11 @@ function sock:on_message(msg)
                 robot.select(srcSlot)
                 success, err = tc.drain(amount)
                 if not success then print("err: " .. err) sock:send(sid .. ",6") return end
-                success, err = robot.fill(interactSide, dstSlot, amount)
+                success, err = component.robot.fill(interactSide, amount)
                 if not success then print("err: " .. err) sock:send(sid .. ",6") return end
             else
                 robot.select(dstSlot)
-                success, err = robot.drain(interactSide, srcSlot, amount)
+                success, err = component.robot.drain(interactSide, amount)
                 if not success then print("err: " .. err) sock:send(sid .. ",6") return end
                 success, err = tc.fill(amount)
                 if not success then print("err: " .. err) sock:send(sid .. ",6") return end
@@ -232,6 +233,13 @@ function sock:on_message(msg)
             robot.select(10)
             ic.dropIntoSlot(interactSide, 1)
         end
+        local amount = 8000
+        component.robot.fill(interactSide, amount)
+        for i=11,16 do
+            robot.select(i)
+            tc.drain(amount)
+            component.robot.fill(interactSide, amount)
+        end
         sock:send(sid .. ",1")
     elseif opcode == 7 then
         local id = entries[2 + 1]
@@ -248,7 +256,7 @@ function sock:on_message(msg)
         -- break/replace
         local success, err = robot.swingUp()
         if not success then print("err: " .. err) sock:send(sid .. ",6") return end
-        local found = false 
+        local found = false
         for i=1,16 do
             -- find the machine
             local stack = ic.getStackInInternalSlot(i)

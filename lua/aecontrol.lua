@@ -46,6 +46,7 @@ function sock:on_message(msg)
         local len = tonumber(entries[3])
         for i=1,len do
             db.clear(1)
+            me.setFluidInterfaceConfiguration(i - 1, db.address, 0)
             local id = entries[i + 3]
             -- there appears to be no better way to do this unfortunately
             -- 1) find fluid in network and get its label
