@@ -89,7 +89,7 @@ const jobs: JobDef[] = [
     fluidIngredients: [],
     itemsNotConsumed: [false, false, false, false]
   },
-  /*{
+  {
     name: "8 * Titanium Rod",
     machineId: "extruder",
     expectedTicks: 192,
@@ -121,7 +121,7 @@ const jobs: JobDef[] = [
     ],
     fluidIngredients: [],
     itemsNotConsumed: [false, true]
-  },*/
+  },
   {
     name: "8 * 2x Aluminium Cable",
     machineId: "assembler",
@@ -135,7 +135,7 @@ const jobs: JobDef[] = [
     ],
     itemsNotConsumed: [false, true]
   },
-  /*{
+  {
     name: "4 * Magnetic Neodymium Rod",
     machineId: "polarizer",
     expectedTicks: 256,
@@ -155,7 +155,7 @@ const jobs: JobDef[] = [
     ],
     fluidIngredients: [],
     itemsNotConsumed: [false, true]
-  }*/
+  }
 ];
 
 let robotRpc: RobotRpc | undefined = undefined;
